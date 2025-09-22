@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "./AuthContext";
-import { getDatabase, ref, onValue, set, update } from "firebase/database"; 
+import { getDatabase, ref, onValue, set, update } from "firebase/database";
 import { app } from "../firebase";
 
 export const InventoryContext = createContext();
@@ -41,7 +41,10 @@ export const InventoryProvider = ({ children }) => {
       userEmail: user.email,
     };
 
-    const invRef = ref(db, `inventories/${user.email.replace(/\./g, "_")}/${newItem.id}`);
+    const invRef = ref(
+      db,
+      `inventories/${user.email.replace(/\./g, "_")}/${newItem.id}`
+    );
     await set(invRef, newItem);
     return newItem.id;
   };
@@ -54,23 +57,31 @@ export const InventoryProvider = ({ children }) => {
     setInventory(updated);
 
     const item = updated.find((it) => it.id === id);
-    const itemRef = ref(db, `inventories/${user.email.replace(/\./g, "_")}/${id}`);
+    const itemRef = ref(
+      db,
+      `inventories/${user.email.replace(/\./g, "_")}/${id}`
+    );
     await update(itemRef, { qty: item.qty });
   };
 
-  // ❌ Consumir
+  // ❌ Consumir material directo
   const consumeMaterial = async (id, amount) => {
     const updated = inventory.map((it) =>
-      it.id === id ? { ...it, qty: Math.max(0, it.qty - Number(amount || 0)) } : it
+      it.id === id
+        ? { ...it, qty: Math.max(0, it.qty - Number(amount || 0)) }
+        : it
     );
     setInventory(updated);
 
     const item = updated.find((it) => it.id === id);
-    const itemRef = ref(db, `inventories/${user.email.replace(/\./g, "_")}/${id}`);
+    const itemRef = ref(
+      db,
+      `inventories/${user.email.replace(/\./g, "_")}/${id}`
+    );
     await update(itemRef, { qty: item.qty });
   };
 
-  // 📑 Consumir receta
+  // 📑 Consumir receta completa
   const consumeMaterials = async (recipe, multiplier = 1) => {
     const updated = inventory.map((it) => {
       const r = recipe.find((x) => String(x.materialId) === String(it.id));
@@ -83,10 +94,18 @@ export const InventoryProvider = ({ children }) => {
 
     setInventory(updated);
 
-    updated.forEach(async (item) => {
-      const itemRef = ref(db, `inventories/${user.email.replace(/\./g, "_")}/${item.id}`);
-      await update(itemRef, { qty: item.qty });
-    });
+    // 🔹 Solo actualizar insumos de la receta
+    await Promise.all(
+      recipe.map((r) => {
+        const item = updated.find((m) => String(m.id) === String(r.materialId));
+        if (!item) return null;
+        const itemRef = ref(
+          db,
+          `inventories/${user.email.replace(/\./g, "_")}/${item.id}`
+        );
+        return update(itemRef, { qty: item.qty });
+      })
+    );
   };
 
   // ♻️ Restaurar materiales al cancelar venta
@@ -102,16 +121,26 @@ export const InventoryProvider = ({ children }) => {
 
     setInventory(updated);
 
-    updated.forEach(async (item) => {
-      const itemRef = ref(db, `inventories/${user.email.replace(/\./g, "_")}/${item.id}`);
-      await update(itemRef, { qty: item.qty });
-    });
+    // 🔹 Solo actualizar insumos de la receta
+    await Promise.all(
+      recipe.map((r) => {
+        const item = updated.find((m) => String(m.id) === String(r.materialId));
+        if (!item) return null;
+        const itemRef = ref(
+          db,
+          `inventories/${user.email.replace(/\./g, "_")}/${item.id}`
+        );
+        return update(itemRef, { qty: item.qty });
+      })
+    );
   };
 
   // ✅ Validar receta
   const checkMaterials = (recipe, multiplier = 1) => {
     return recipe.every((item) => {
-      const material = inventory.find((m) => String(m.id) === String(item.materialId));
+      const material = inventory.find(
+        (m) => String(m.id) === String(item.materialId)
+      );
       return material && material.qty >= item.qty * multiplier;
     });
   };
@@ -127,7 +156,7 @@ export const InventoryProvider = ({ children }) => {
         restockMaterial,
         consumeMaterial,
         consumeMaterials,
-        returnMaterials, // 👈 ahora sí exportada
+        returnMaterials,
         findMaterial,
         checkMaterials,
       }}

@@ -1,9 +1,20 @@
 import React, { useContext } from "react";
-import { View, Text, FlatList, StyleSheet } from "react-native";
+import { View, Text, FlatList, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import { CashContext } from "../context/CashContext";
 
 export default function CashHistory() {
-  const { cashHistory } = useContext(CashContext);
+  const { cashHistory, removeCashRecord } = useContext(CashContext);
+
+  const handleDelete = (id) => {
+    Alert.alert(
+      "Eliminar cierre",
+      "¿Estás seguro de que quieres eliminar este cierre?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Eliminar", style: "destructive", onPress: () => removeCashRecord(id) },
+      ]
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -15,14 +26,18 @@ export default function CashHistory() {
         <FlatList
           data={cashHistory}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: 20 }}
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <TouchableOpacity
+              style={styles.card}
+              onLongPress={() => handleDelete(item.id)}
+            >
               <Text>📅 {item.date}</Text>
               <Text>💵 Inicial: ${item.initialCash}</Text>
               <Text>🛒 Ventas: ${item.salesTotal}</Text>
               <Text>💸 Gastos: ${item.expensesTotal}</Text>
               <Text>📦 Final: ${item.finalCash}</Text>
-            </View>
+            </TouchableOpacity>
           )}
         />
       )}
@@ -31,7 +46,12 @@ export default function CashHistory() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: "#fff" },
+  container: { 
+    flex: 1, 
+    padding: 15, 
+    backgroundColor: "#fff", 
+    paddingTop: 70 // 🔹 Evita que choque con la barra de notificaciones
+  },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 15 },
   card: {
     backgroundColor: "#f1f1f1",

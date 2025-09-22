@@ -1,3 +1,4 @@
+// screens/Sales.js
 import React, { useContext, useState, useMemo } from "react";
 import {
   View,
@@ -17,7 +18,6 @@ import { useOrders } from "../context/OrdersContext";
 
 const sauces = ["Rosada", "tartara", "Salsa de la casa", "Salsa roja", "Piña"];
 
-// Extras con precio
 const extrasConfig = {
   "Sin cebolla": 0,
   "Con cebolla": 0,
@@ -39,7 +39,7 @@ const showAlert = (title, message) => {
 export default function Sales() {
   const { products } = useContext(ProductsContext);
   const { cart, addToCart: addToCartOriginal, confirmSale, clearCart } =
-    useContext(SalesContext);
+    useContext(SalesContext); // ahora trae clearCart
   const { consumeMaterials, checkMaterials, returnMaterials } =
     useContext(InventoryContext);
   const { addOrder } = useOrders();
@@ -136,7 +136,7 @@ export default function Sales() {
         options: item.options,
         amount: (Number(item.price) || 0) * (Number(item.qty) || 0),
         date: new Date().toISOString().split("T")[0],
-        status: "Recibido", // 👈 aseguramos que entren como recibidas
+        status: "Recibido",
       };
       addOrder(orderToSend);
     });
@@ -149,16 +149,35 @@ export default function Sales() {
   };
 
   const handleCancelSale = () => {
-    if (cart.length === 0) return;
+    if (cart.length === 0) {
+      showAlert("Sin productos", "No hay nada para cancelar.");
+      return;
+    }
+
+    let restoredCount = 0;
 
     cart.forEach((item) => {
       if (Array.isArray(item.recipe) && item.recipe.length > 0) {
-        returnMaterials(item.recipe, item.qty || 1);
+        // aseguramos que cada receta tenga materialId y qty
+        item.recipe.forEach((r) => {
+          if (r.materialId && r.qty) {
+            // devolver insumos multiplicando por qty del item
+            returnMaterials([{ materialId: r.materialId, qty: r.qty }], item.qty || 1);
+            restoredCount++;
+          }
+        });
       }
     });
 
+    // limpio carrito usando la función exportada por el contexto
     clearCart();
-    showAlert("Venta cancelada", "El carrito ha sido vaciado y el inventario restaurado.");
+
+    showAlert(
+      "Venta cancelada",
+      restoredCount > 0
+        ? "El carrito ha sido vaciado y los insumos restaurados al inventario."
+        : "El carrito ha sido vaciado (no había insumos para devolver)."
+    );
   };
 
   const renderProduct = ({ item }) => (
@@ -243,7 +262,6 @@ export default function Sales() {
               <Text style={styles.totalText}>Total: ${totalPrice}</Text>
             </ScrollView>
 
-            {/* 🔹 Botones fijos abajo */}
             <TouchableOpacity
               style={styles.confirmButton}
               onPress={handleAddToCart}

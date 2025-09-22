@@ -19,10 +19,11 @@ export function OrdersProvider({ children }) {
     const newOrderRef = push(ordersRef);
 
     const orderWithDefaults = {
-      ...order,
-      status: "Recibido", // 👈 siempre recibida al inicio
+      product: order.product ?? { id: "unknown", name: "Producto" },
+      qty: Number(order.qty) || 1,
+      status: "Recibido",
       date: new Date().toISOString().split("T")[0],
-      amount: order.amount ?? order.qty * 10000,
+      amount: order.amount ?? (Number(order.qty) || 1) * (order.product?.price || 0),
     };
 
     set(newOrderRef, orderWithDefaults)
@@ -66,10 +67,15 @@ export function OrdersProvider({ children }) {
         const parsedOrders = Object.keys(data)
           .map((key) => {
             const order = data[key];
-            if (order && order.product && order.qty) {
-              return { id: key, ...order };
-            }
-            return null;
+            if (!order || !order.product || !order.qty) return null;
+            return {
+              id: key,
+              product: order.product ?? { id: "unknown", name: "Producto" },
+              qty: Number(order.qty) || 1,
+              status: order.status ?? "Recibido",
+              date: order.date ?? new Date().toISOString().split("T")[0],
+              amount: order.amount ?? (Number(order.qty) || 1) * (order.product?.price || 0),
+            };
           })
           .filter(Boolean);
 
@@ -82,9 +88,8 @@ export function OrdersProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  // 🔹 Filtros útiles
   const activeOrders = orders.filter(
-    (o) => o.status === "Recibido" || o.status === "Activo"
+    (o) => o.status === "Recibido" || o.status === "Preparando"
   );
   const closedOrders = orders.filter((o) => o.status === "Cerrado");
 
@@ -92,7 +97,7 @@ export function OrdersProvider({ children }) {
     <OrdersContext.Provider
       value={{
         orders,
-        activeOrders, // 👈 aquí tienes las activas listas
+        activeOrders,
         closedOrders,
         addOrder,
         updateOrderStatus,

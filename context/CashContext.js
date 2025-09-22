@@ -10,6 +10,13 @@ export const CashProvider = ({ children }) => {
   const [initialCash, setInitialCash] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [cashHistory, setCashHistory] = useState([]);
+  // Dentro de CashContext
+const removeCashRecord = async (id) => {
+  const updatedHistory = cashHistory.filter((item) => item.id !== id);
+  setCashHistory(updatedHistory);
+  await AsyncStorage.setItem("cashHistory", JSON.stringify(updatedHistory));
+};
+
 
   const { salesHistory, closeDay: closeSalesDay } = useContext(SalesContext);
   const { expenses, closeDay: closeExpensesDay } = useContext(ExpensesContext);
@@ -99,6 +106,7 @@ export const CashProvider = ({ children }) => {
         openCash,
         closeCash,
         cashHistory,
+        removeCashRecord,
       }}
     >
       {children}

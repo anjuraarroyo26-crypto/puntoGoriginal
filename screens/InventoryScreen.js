@@ -101,7 +101,7 @@ const InventoryScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#FFD700" },
+  container: { flex: 1, padding: 16, backgroundColor: "#FFD700", paddingTop: 60, },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
   itemContainer: {
     flexDirection: "row",

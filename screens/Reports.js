@@ -15,16 +15,24 @@ export default function Reports() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
 
-  const today = selectedDate.toDateString();
-  const weekAgo = new Date(selectedDate);
-  weekAgo.setDate(weekAgo.getDate() - 7);
+  // 🔹 Función para normalizar fechas (sin horas)
+  const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const today = startOfDay(selectedDate);
+
+  // Últimos 7 días incluyendo hoy
+  const weekStart = new Date(today);
+  weekStart.setDate(weekStart.getDate() - 6);
 
   // ===== FILTROS =====
   const filterByDate = (arr) =>
-    arr.filter((item) => new Date(item.date).toDateString() === today);
+    arr.filter((item) => startOfDay(new Date(item.date)).getTime() === today.getTime());
 
   const filterByWeek = (arr) =>
-    arr.filter((item) => new Date(item.date) >= weekAgo && new Date(item.date) <= selectedDate);
+    arr.filter((item) => {
+      const itemDate = startOfDay(new Date(item.date));
+      return itemDate >= weekStart && itemDate <= today;
+    });
 
   const dailySales = filterByDate(allSalesHistory);
   const dailyExpenses = filterByDate(allExpenses);
@@ -32,7 +40,8 @@ export default function Reports() {
   const weeklySales = filterByWeek(allSalesHistory);
   const weeklyExpenses = filterByWeek(allExpenses);
 
-  const sumTotal = (arr, key) => arr.reduce((sum, item) => sum + item[key], 0);
+  const sumTotal = (arr, key) => arr.reduce((sum, item) => sum + (item[key] || 0), 0);
+
   const dailySalesTotal = sumTotal(dailySales, "total");
   const dailyExpensesTotal = sumTotal(dailyExpenses, "amount");
   const weeklySalesTotal = sumTotal(weeklySales, "total");
@@ -49,20 +58,18 @@ export default function Reports() {
       if (type === "daily") {
         salesData = dailySales;
         expensesData = dailyExpenses;
-        fileName = `Reporte_Dia_${today}.xlsx`;
+        fileName = `Reporte_Dia_${today.toDateString()}.xlsx`;
       } else {
         salesData = weeklySales;
         expensesData = weeklyExpenses;
-        fileName = `Reporte_Semana_${today}.xlsx`;
+        fileName = `Reporte_Semana_${today.toDateString()}.xlsx`;
       }
 
-      // Cabecera
-      const wsData = [["Reporte " + (type === "daily" ? "Diario" : "Semanal") + " - " + today]];
+      const wsData = [["Reporte " + (type === "daily" ? "Diario" : "Semanal") + " - " + today.toDateString()]];
       wsData.push([]);
       wsData.push(["Ventas Detalladas"]);
       wsData.push(["Fecha", "Producto", "Cantidad", "Precio Unitario", "Total"]);
 
-      // Agregar ventas
       salesData.forEach((sale) => {
         sale.products.forEach((p) => {
           wsData.push([
@@ -79,7 +86,6 @@ export default function Reports() {
       wsData.push(["Gastos Detallados"]);
       wsData.push(["Fecha", "Descripción", "Monto"]);
 
-      // Agregar gastos
       expensesData.forEach((exp) => {
         wsData.push([new Date(exp.date).toLocaleString(), exp.description, exp.amount]);
       });
@@ -93,7 +99,6 @@ export default function Reports() {
         sumTotal(salesData, "total") - sumTotal(expensesData, "amount"),
       ]);
 
-      // Crear libro y hoja
       const ws = XLSX.utils.aoa_to_sheet(wsData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Reporte");
@@ -113,7 +118,7 @@ export default function Reports() {
       <Text style={styles.title}>📊 Reportes</Text>
 
       <TouchableOpacity style={styles.dateButton} onPress={() => setShowPicker(true)}>
-        <Text>Seleccionar Fecha: {selectedDate.toDateString()}</Text>
+        <Text>Seleccionar Fecha: {today.toDateString()}</Text>
       </TouchableOpacity>
 
       {showPicker && (
@@ -168,11 +173,11 @@ export default function Reports() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: "#fff" },
+  container: { flex: 1, padding: 15, backgroundColor: "#fff", paddingTop: 70 },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
   card: {
     backgroundColor: "#f9f9f9",
-    padding: 15,
+    padding: 10,
     borderRadius: 10,
     marginBottom: 10,
     elevation: 2,

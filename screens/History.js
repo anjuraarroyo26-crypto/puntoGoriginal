@@ -169,7 +169,7 @@ export default function History() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: "#fff" },
+  container: { flex: 1, padding: 15, backgroundColor: "#fff", paddingTop: 70 },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 15 },
   sectionTitle: { fontSize: 18, fontWeight: "bold", marginTop: 20 },
   card: {

@@ -61,7 +61,7 @@ export default function Dashboard({ navigation }) {
 
       {/* Dashboard */}
       <View style={styles.dashboardBox}>
-        <Text style={styles.dashboardTitle}>Dashboard</Text>
+        <Text style={styles.dashboardTitle}>INICIO</Text>
 
         {/* Tarjetas de Ventas, Gastos e Inventario */}
         <View style={styles.row}>
@@ -132,8 +132,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFD700" },
   logoutButton: {
     position: "absolute",
-    top: 40,
-    left: 20,
+    top: 50,
+    left: 10,
     zIndex: 10,
     backgroundColor: "#333",
     padding: 10,
@@ -141,13 +141,13 @@ const styles = StyleSheet.create({
   },
   logoutText: { color: "#fff", fontWeight: "bold" },
   header: { alignItems: "center", marginTop: 30, marginBottom: 10 },
-  logo: { width: 180, height: 80 },
+  logo: { width: 280, height: 230 },
   dashboardBox: {
     flex: 1,
     backgroundColor: "#e53935ff",
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    padding: 20,
+    padding: 15,
     alignItems: "center",
   },
   dashboardTitle: {

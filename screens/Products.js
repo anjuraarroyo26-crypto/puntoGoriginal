@@ -64,8 +64,8 @@ const Products = () => {
   };
 
   return (
-    <View style={{ flex: 1, padding: 16 }}>
-      <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}>
+    <View style={{ flex: 1, padding: 16,  paddingTop: 70 }}>
+      <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 10 }}>
         Lista de Productos
       </Text>
 

@@ -1,7 +1,8 @@
+// context/SalesContext.js
 import React, { createContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import app from "../firebase";
-import { getDatabase, ref, set, push } from "firebase/database";
+import { getDatabase, ref, push, set } from "firebase/database";
+import { app } from "../firebase";
 
 export const SalesContext = createContext();
 
@@ -10,24 +11,28 @@ export const SalesProvider = ({ children }) => {
   const [salesHistory, setSalesHistory] = useState([]);
   const [allSalesHistory, setAllSalesHistory] = useState([]);
 
-  // Cargar datos desde AsyncStorage al iniciar
+  // Cargar desde AsyncStorage
   useEffect(() => {
     (async () => {
-      const storedCart = await AsyncStorage.getItem("cart");
-      const storedSalesHistory = await AsyncStorage.getItem("salesHistory");
-      const storedAllSalesHistory = await AsyncStorage.getItem("allSalesHistory");
+      try {
+        const storedCart = await AsyncStorage.getItem("cart");
+        const storedSalesHistory = await AsyncStorage.getItem("salesHistory");
+        const storedAllSalesHistory = await AsyncStorage.getItem("allSalesHistory");
 
-      if (storedCart) setCart(JSON.parse(storedCart));
-      if (storedSalesHistory) setSalesHistory(JSON.parse(storedSalesHistory));
-      if (storedAllSalesHistory) setAllSalesHistory(JSON.parse(storedAllSalesHistory));
+        if (storedCart) setCart(JSON.parse(storedCart));
+        if (storedSalesHistory) setSalesHistory(JSON.parse(storedSalesHistory));
+        if (storedAllSalesHistory) setAllSalesHistory(JSON.parse(storedAllSalesHistory));
+      } catch (e) {
+        console.log("Error cargando ventas:", e);
+      }
     })();
   }, []);
 
-  // Guardar automáticamente cada vez que cambien los estados
+  // Guardar automáticamente
   useEffect(() => {
-    AsyncStorage.setItem("cart", JSON.stringify(cart));
-    AsyncStorage.setItem("salesHistory", JSON.stringify(salesHistory));
-    AsyncStorage.setItem("allSalesHistory", JSON.stringify(allSalesHistory));
+    AsyncStorage.setItem("cart", JSON.stringify(cart)).catch(() => {});
+    AsyncStorage.setItem("salesHistory", JSON.stringify(salesHistory)).catch(() => {});
+    AsyncStorage.setItem("allSalesHistory", JSON.stringify(allSalesHistory)).catch(() => {});
   }, [cart, salesHistory, allSalesHistory]);
 
   const addToCart = (product) => {
@@ -73,6 +78,9 @@ export const SalesProvider = ({ children }) => {
     setCart((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // ✅ función que antes faltaba: vaciar carrito
+  const clearCart = () => setCart([]);
+
   const confirmSale = async (productsOverride = null) => {
     const productsToSell =
       productsOverride ||
@@ -87,7 +95,7 @@ export const SalesProvider = ({ children }) => {
     if (!productsToSell || productsToSell.length === 0) return null;
 
     const total = productsToSell.reduce(
-      (sum, item) => sum + (item.price || 0) * (item.qty || 1),
+      (sum, item) => sum + (Number(item.price) || 0) * (Number(item.qty) || 1),
       0
     );
 
@@ -104,7 +112,7 @@ export const SalesProvider = ({ children }) => {
     setAllSalesHistory((prev) => [saleRecord, ...prev]);
     setCart([]);
 
-    // Guardar en Firebase Realtime Database
+    // Guardar en Firebase Realtime Database (si falla, lo atrapamos)
     try {
       const db = getDatabase(app);
       const salesRef = ref(db, "sales");
@@ -125,9 +133,7 @@ export const SalesProvider = ({ children }) => {
   };
 
   const getSalesByDate = (dateString) =>
-    salesHistory.filter(
-      (s) => new Date(s.date).toLocaleDateString() === dateString
-    );
+    salesHistory.filter((s) => new Date(s.date).toLocaleDateString() === dateString);
 
   return (
     <SalesContext.Provider
@@ -136,6 +142,7 @@ export const SalesProvider = ({ children }) => {
         addToCart,
         decreaseFromCart,
         removeFromCart,
+        clearCart,
         confirmSale,
         salesHistory,
         allSalesHistory,

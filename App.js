@@ -6,15 +6,12 @@ import TabNavigator from "./navigation/TabNavigator";
 import CookNavigator from "./navigation/CookTabNavigator";
 import AuthScreen from "./screens/Auth/AuthScreen";
 
-// Contextos
 import { InventoryProvider } from "./context/InventoryContext";
 import { SalesProvider } from "./context/SalesContext";
 import { ProductsProvider } from "./context/ProductsContext";
 import { ExpensesProvider } from "./context/ExpensesContext";
 import { CashProvider } from "./context/CashContext";
-import { OrdersProvider } from "./context/OrdersContext"; // ✅ Firebase Realtime Database
-
-// 🔹 Contexto de autenticación
+import { OrdersProvider } from "./context/OrdersContext"; 
 import { AuthProvider } from "./context/AuthContext";
 
 const Stack = createStackNavigator();
@@ -22,13 +19,13 @@ const Stack = createStackNavigator();
 function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {/* Pantalla de autenticación */}
+      
       <Stack.Screen name="Auth" component={AuthScreen} />
 
-      {/* App principal */}
+      
       <Stack.Screen name="Main" component={TabNavigator} />
 
-      {/* App del cocinero */}
+      
       <Stack.Screen name="Cooker" component={CookNavigator} />
     </Stack.Navigator>
   );
@@ -37,10 +34,10 @@ function RootNavigator() {
 export default function App() {
   return (
     <AuthProvider>
-      <InventoryProvider>      {/* primero inventario */}
-        <SalesProvider>         {/* ventas antes que productos */}
-          <OrdersProvider>      {/* sincronización en tiempo real con Firebase */}
-            <ProductsProvider>  {/* productos que usan confirmSale o consumeMaterials */}
+      <InventoryProvider>      
+        <SalesProvider>         
+          <OrdersProvider>      
+            <ProductsProvider>  
               <ExpensesProvider>
                 <CashProvider>
                   <NavigationContainer>
